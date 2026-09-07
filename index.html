@@ -4,17 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Play Nine — Card Golf</title>
+<meta property="og:title" content="Play Nine — Card Golf">
+<meta property="og:description" content="Join me for a game of Play Nine, the card game of golf!">
 <style>
   :root {
     --bg: #0f3d2e;
     --bg2: #145c43;
-    --felt: #17694c;
     --card-w: 64px;
     --card-h: 90px;
     --ink: #f2f7f4;
     --muted: #a8c5b8;
     --accent: #ffd166;
-    --danger: #ef6461;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -28,17 +28,13 @@
 
   /* ---------- Setup screen ---------- */
   #setup {
-    max-width: 420px;
+    max-width: 440px;
     margin: 0 auto;
     padding: 48px 24px;
     text-align: center;
   }
-  #setup h1 {
-    font-size: 2.6rem;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-  }
-  #setup h1 .nine { color: var(--accent); }
+  #setup h1 { font-size: 2.6rem; letter-spacing: 1px; margin-bottom: 4px; }
+  #setup h1 .nine, .title .nine { color: var(--accent); }
   #setup .tagline { color: var(--muted); margin-bottom: 32px; }
   .field { text-align: left; margin-bottom: 18px; }
   .field label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
@@ -64,27 +60,34 @@
     transition: transform 0.1s, filter 0.1s;
   }
   .btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
-  .btn.secondary {
-    background: rgba(255,255,255,0.12);
-    color: var(--ink);
-  }
+  .btn:disabled { opacity: 0.6; cursor: wait; }
+  .btn.secondary { background: rgba(255,255,255,0.12); color: var(--ink); }
   .btn.small { padding: 7px 14px; font-size: 0.85rem; }
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    color: var(--muted); font-size: 0.85rem;
+    margin: 26px 0 18px;
+  }
+  .divider::before, .divider::after {
+    content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.18);
+  }
+  #join-error { color: #ff9b9b; margin-top: 12px; font-size: 0.9rem; }
   #resume-note { margin-top: 18px; }
 
   /* ---------- Game screen ---------- */
   #game { max-width: 900px; margin: 0 auto; padding: 12px 12px 40px; }
   #topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 8px 4px 12px;
-    flex-wrap: wrap;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; padding: 8px 4px 12px; flex-wrap: wrap;
   }
   #topbar .title { font-weight: 700; font-size: 1.1rem; }
-  #topbar .title .nine { color: var(--accent); }
   #hole-indicator { color: var(--muted); font-size: 0.95rem; }
-  #topbar .actions { display: flex; gap: 8px; }
+  #topbar .actions { display: flex; gap: 8px; align-items: center; }
+  #net-status {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #6ee7a0; display: inline-block;
+  }
+  #net-status.bad { background: #ef6461; animation: pulse 1s infinite; }
 
   #banner {
     text-align: center;
@@ -98,11 +101,7 @@
   }
   #banner .who { color: var(--accent); font-weight: 700; }
 
-  .table-area {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
+  .table-area { display: flex; flex-direction: column; gap: 14px; }
   .player-board {
     background: rgba(0,0,0,0.18);
     border: 2px solid transparent;
@@ -115,18 +114,10 @@
     box-shadow: 0 0 18px rgba(255,209,102,0.25);
   }
   .player-board .board-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
+    display: flex; justify-content: space-between; align-items: baseline;
     margin-bottom: 10px;
   }
   .player-board .pname { font-weight: 700; }
-  .player-board.active .pname::after {
-    content: " ▸ your turn";
-    color: var(--accent);
-    font-weight: 400;
-    font-size: 0.8rem;
-  }
   .player-board .ptotal { color: var(--muted); font-size: 0.9rem; }
   .grid {
     display: grid;
@@ -138,21 +129,15 @@
 
   /* ---------- Cards ---------- */
   .card {
-    width: var(--card-w);
-    height: var(--card-h);
+    width: var(--card-w); height: var(--card-h);
     border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 800;
-    user-select: none;
-    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; font-weight: 800;
+    user-select: none; position: relative;
     box-shadow: 0 2px 5px rgba(0,0,0,0.4);
   }
   .card.down {
-    background:
-      repeating-linear-gradient(45deg, #1d4ed8 0 6px, #1e40af 6px 12px);
+    background: repeating-linear-gradient(45deg, #1d4ed8 0 6px, #1e40af 6px 12px);
     border: 3px solid #dbeafe;
     color: transparent;
   }
@@ -160,16 +145,12 @@
   .card.clickable { cursor: pointer; }
   .card.clickable::after {
     content: "";
-    position: absolute;
-    inset: -5px;
+    position: absolute; inset: -5px;
     border-radius: 11px;
     border: 2px dashed var(--accent);
     animation: pulse 1.2s infinite;
   }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.35; }
-    50% { opacity: 1; }
-  }
+  @keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
   .card.empty {
     background: rgba(255,255,255,0.06);
     border: 2px dashed rgba(255,255,255,0.25);
@@ -179,12 +160,8 @@
 
   /* ---------- Center piles ---------- */
   #center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 28px;
-    padding: 6px 0;
-    flex-wrap: wrap;
+    display: flex; align-items: center; justify-content: center;
+    gap: 28px; padding: 6px 0; flex-wrap: wrap;
   }
   .pile { text-align: center; }
   .pile .pile-label { font-size: 0.75rem; color: var(--muted); margin-top: 6px; }
@@ -192,45 +169,52 @@
   #drawn-area .pile-label { color: var(--accent); }
   #discard-drawn-btn { margin-top: 8px; }
   #stock-count {
-    position: absolute;
-    bottom: 4px;
-    right: 6px;
-    font-size: 0.65rem;
-    color: #dbeafe;
-    text-shadow: none;
-    font-weight: 600;
+    position: absolute; bottom: 4px; right: 6px;
+    font-size: 0.65rem; color: #dbeafe; text-shadow: none; font-weight: 600;
   }
 
   /* ---------- Overlays ---------- */
   .overlay {
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background: rgba(0,0,0,0.65);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; z-index: 10;
   }
   .overlay .panel {
     background: #113a2c;
     border: 1px solid rgba(255,255,255,0.18);
     border-radius: 16px;
     padding: 28px;
-    max-width: 480px;
-    width: 100%;
-    max-height: 85vh;
-    overflow-y: auto;
+    max-width: 480px; width: 100%;
+    max-height: 85vh; overflow-y: auto;
     text-align: center;
   }
   .panel h2 { margin-bottom: 14px; }
   .panel .big-winner { font-size: 1.4rem; color: var(--accent); margin: 10px 0 18px; }
+  .panel p.note { color: var(--muted); font-size: 0.9rem; margin: 10px 0; }
+
+  #share-link {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(0,0,0,0.3);
+    color: var(--accent);
+    font-size: 0.9rem;
+    margin: 12px 0;
+    text-align: center;
+  }
+  .waiting-dots::after {
+    content: "…";
+    animation: dots 1.5s steps(4) infinite;
+  }
+  @keyframes dots {
+    0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; }
+  }
 
   table.scorecard {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 14px 0 20px;
-    font-size: 0.95rem;
+    width: 100%; border-collapse: collapse;
+    margin: 14px 0 20px; font-size: 0.95rem;
   }
   table.scorecard th, table.scorecard td {
     padding: 6px 10px;
@@ -248,9 +232,26 @@
 
   .panel .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
-  #rules-body { text-align: left; font-size: 0.92rem; line-height: 1.5; color: var(--ink); }
+  #rules-body { text-align: left; font-size: 0.92rem; line-height: 1.5; }
   #rules-body h3 { margin: 12px 0 4px; color: var(--accent); font-size: 1rem; }
   #rules-body ul { padding-left: 20px; }
+
+  #toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #0b2b20;
+    border: 1px solid var(--accent);
+    color: var(--ink);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    opacity: 0;
+    transition: transform 0.25s, opacity 0.25s;
+    z-index: 50;
+    max-width: 90vw;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
   @media (min-width: 720px) {
     .table-area { flex-direction: row; align-items: stretch; }
@@ -264,30 +265,51 @@
 </head>
 <body>
 
-<!-- ========== SETUP ========== -->
+<!-- ========== SETUP / JOIN ========== -->
 <div id="setup">
   <h1>Play <span class="nine">Nine</span></h1>
   <p class="tagline">The card game of golf — for two players</p>
-  <div class="field">
-    <label for="p1-name">Player 1 name</label>
-    <input type="text" id="p1-name" maxlength="16" placeholder="Player 1" value="Player 1">
+
+  <div id="create-panel">
+    <div class="field">
+      <label for="online-name">Your name</label>
+      <input type="text" id="online-name" maxlength="16" placeholder="Your name" value="">
+    </div>
+    <div class="field">
+      <label for="holes">Number of holes (rounds)</label>
+      <select id="holes">
+        <option value="3">3 holes — quick game</option>
+        <option value="6">6 holes</option>
+        <option value="9" selected>9 holes — standard</option>
+        <option value="18">18 holes — full round</option>
+      </select>
+    </div>
+    <button class="btn" id="create-online-btn">Create online game</button>
+    <div class="divider">or play on one device</div>
+    <div id="local-names" class="hidden">
+      <div class="field">
+        <label for="p1-name">Player 1 name</label>
+        <input type="text" id="p1-name" maxlength="16" value="Player 1">
+      </div>
+      <div class="field">
+        <label for="p2-name">Player 2 name</label>
+        <input type="text" id="p2-name" maxlength="16" value="Player 2">
+      </div>
+    </div>
+    <button class="btn secondary" id="start-local-btn">Pass &amp; play on this device</button>
+    <div id="resume-note" class="hidden" style="margin-top:18px">
+      <button class="btn secondary" id="resume-btn">Resume saved local game</button>
+    </div>
   </div>
-  <div class="field">
-    <label for="p2-name">Player 2 name</label>
-    <input type="text" id="p2-name" maxlength="16" placeholder="Player 2" value="Player 2">
-  </div>
-  <div class="field">
-    <label for="holes">Number of holes (rounds)</label>
-    <select id="holes">
-      <option value="3">3 holes — quick game</option>
-      <option value="6">6 holes</option>
-      <option value="9" selected>9 holes — standard</option>
-      <option value="18">18 holes — full round</option>
-    </select>
-  </div>
-  <button class="btn" id="start-btn">Start Game</button>
-  <div id="resume-note" class="hidden">
-    <button class="btn secondary" id="resume-btn">Resume saved game</button>
+
+  <div id="join-panel" class="hidden">
+    <p style="margin-bottom:18px">🏌️ You've been invited to a game!</p>
+    <div class="field">
+      <label for="join-name">Your name</label>
+      <input type="text" id="join-name" maxlength="16" placeholder="Your name" value="">
+    </div>
+    <button class="btn" id="join-btn">Join game</button>
+    <div id="join-error" class="hidden"></div>
   </div>
 </div>
 
@@ -297,9 +319,10 @@
     <span class="title">Play <span class="nine">Nine</span></span>
     <span id="hole-indicator"></span>
     <span class="actions">
+      <span id="net-status" class="hidden"></span>
       <button class="btn secondary small" id="scorecard-btn">Scorecard</button>
       <button class="btn secondary small" id="rules-btn">Rules</button>
-      <button class="btn secondary small" id="newgame-btn">New Game</button>
+      <button class="btn secondary small" id="newgame-btn">Menu</button>
     </span>
   </div>
 
@@ -337,6 +360,20 @@
       </div>
       <div class="grid" id="grid-1"></div>
     </div>
+  </div>
+</div>
+
+<!-- ========== LOBBY OVERLAY ========== -->
+<div id="lobby-overlay" class="overlay hidden">
+  <div class="panel">
+    <h2>Invite your opponent</h2>
+    <p class="note">Send this link — when they open it, the game starts automatically.</p>
+    <input type="text" id="share-link" readonly>
+    <div class="btn-row">
+      <button class="btn" id="copy-link-btn">Copy link</button>
+      <button class="btn secondary" id="lobby-back-btn">Cancel</button>
+    </div>
+    <p class="note waiting-dots" style="margin-top:18px">Waiting for opponent</p>
   </div>
 </div>
 
@@ -390,411 +427,8 @@
   </div>
 </div>
 
-<script>
-"use strict";
+<div id="toast"></div>
 
-// ---------------------------------------------------------------- state
-const SAVE_KEY = "playnine-save-v1";
-let S = null; // game state
-
-function newDeck() {
-  const deck = [];
-  for (let v = 0; v <= 12; v++) for (let i = 0; i < 8; i++) deck.push(v);
-  for (let i = 0; i < 4; i++) deck.push(-5);
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  return deck;
-}
-
-function newGame(names, totalHoles) {
-  S = {
-    names,
-    totalHoles,
-    hole: 1,
-    scores: [[], []],       // per-hole scores
-    startingPlayer: Math.floor(Math.random() * 2),
-    // per-hole fields filled by dealHole:
-    stock: [], discard: [], grids: null,
-    phase: "flip",           // flip | turn | done
-    flipTurn: 0,
-    current: 0,
-    drawn: null, drawnFrom: null,
-    mustFlip: false,
-    finisher: null,
-    gameOver: false,
-  };
-  dealHole();
-  save();
-}
-
-function dealHole() {
-  S.stock = newDeck();
-  S.grids = [[], []];
-  for (let p = 0; p < 2; p++)
-    for (let i = 0; i < 8; i++)
-      S.grids[p].push({ v: S.stock.pop(), up: false });
-  S.discard = [S.stock.pop()];
-  S.phase = "flip";
-  S.flipTurn = S.startingPlayer;
-  S.current = S.startingPlayer;
-  S.drawn = null; S.drawnFrom = null;
-  S.mustFlip = false;
-  S.finisher = null;
-}
-
-function save() { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }
-function clearSave() { localStorage.removeItem(SAVE_KEY); }
-
-// ---------------------------------------------------------------- helpers
-const $ = (id) => document.getElementById(id);
-
-function allUp(p) { return S.grids[p].every(c => c.up); }
-function flippedCount(p) { return S.grids[p].filter(c => c.up).length; }
-function total(p) { return S.scores[p].reduce((a, b) => a + b, 0); }
-
-function holeScore(p) {
-  let sum = 0;
-  for (let col = 0; col < 4; col++) {
-    const a = S.grids[p][col].v, b = S.grids[p][col + 4].v;
-    if (a === b) sum += (a === -5) ? -10 : 0;
-    else sum += a + b;
-  }
-  return sum;
-}
-
-function cardColor(v) {
-  if (v === -5) return "linear-gradient(135deg,#b8860b,#ffd166)";
-  const hues = [265, 250, 210, 190, 160, 130, 95, 60, 40, 25, 12, 0, 330];
-  const h = hues[v];
-  return `linear-gradient(135deg, hsl(${h},55%,38%), hsl(${h},65%,52%))`;
-}
-
-function cardHTML(v) {
-  const star = v === -5 ? '<span class="star">★</span>' : "";
-  return `${star}${v === -5 ? "−5" : v}`;
-}
-
-function makeCardEl(card, opts = {}) {
-  const el = document.createElement("div");
-  el.className = "card " + (card ? (card.up ? "up" : "down") : "empty");
-  if (card && card.up) {
-    el.style.background = cardColor(card.v);
-    el.innerHTML = cardHTML(card.v);
-  }
-  if (opts.clickable) el.classList.add("clickable");
-  return el;
-}
-
-// ---------------------------------------------------------------- rendering
-function render() {
-  if (!S) return;
-  $("hole-indicator").textContent = `Hole ${S.hole} of ${S.totalHoles}`;
-
-  for (let p = 0; p < 2; p++) {
-    $("pname-" + p).textContent = S.names[p];
-    $("ptotal-" + p).textContent = `Total: ${total(p)}`;
-    $("board-" + p).classList.toggle("active", isActingPlayer(p));
-  }
-  renderGrids();
-  renderCenter();
-  renderBanner();
-  save();
-}
-
-function isActingPlayer(p) {
-  if (S.gameOver || S.phase === "done") return false;
-  if (S.phase === "flip") return p === S.flipTurn;
-  return p === S.current;
-}
-
-function renderGrids() {
-  for (let p = 0; p < 2; p++) {
-    const grid = $("grid-" + p);
-    grid.innerHTML = "";
-    S.grids[p].forEach((card, i) => {
-      let clickable = false;
-      if (S.phase === "flip" && p === S.flipTurn && !card.up) clickable = true;
-      if (S.phase === "turn" && p === S.current) {
-        if (S.drawn !== null) clickable = true;            // swap target (any card)
-        else if (S.mustFlip && !card.up) clickable = true; // flip target
-      }
-      const el = makeCardEl(card, { clickable });
-      if (clickable) el.addEventListener("click", () => onGridClick(p, i));
-      grid.appendChild(el);
-    });
-  }
-}
-
-function renderCenter() {
-  // stock
-  const stockEl = $("stock-pile");
-  const canDraw = S.phase === "turn" && S.drawn === null && !S.mustFlip;
-  stockEl.classList.toggle("clickable", canDraw);
-  $("stock-count").textContent = S.stock.length;
-
-  // discard
-  const dp = $("discard-pile");
-  dp.innerHTML = "";
-  const top = S.discard.length ? { v: S.discard[S.discard.length - 1], up: true } : null;
-  const discardClickable = canDraw && top !== null;
-  const dEl = makeCardEl(top, { clickable: discardClickable });
-  if (discardClickable) dEl.addEventListener("click", takeDiscard);
-  dp.appendChild(dEl);
-
-  // drawn card
-  const da = $("drawn-area");
-  if (S.drawn !== null) {
-    da.classList.remove("hidden");
-    const dc = $("drawn-card");
-    dc.innerHTML = "";
-    dc.appendChild(makeCardEl({ v: S.drawn, up: true }));
-    $("discard-drawn-btn").classList.toggle("hidden", S.drawnFrom !== "stock");
-  } else {
-    da.classList.add("hidden");
-  }
-}
-
-function renderBanner() {
-  const b = $("banner");
-  const who = (p) => `<span class="who">${escapeHTML(S.names[p])}</span>`;
-  let msg = "";
-  if (S.phase === "flip") {
-    const left = 2 - flippedCount(S.flipTurn);
-    msg = `${who(S.flipTurn)}: flip ${left} of your cards to start the hole.`;
-  } else if (S.phase === "turn") {
-    if (S.drawn !== null) {
-      msg = S.drawnFrom === "stock"
-        ? `${who(S.current)}: swap the drawn card with one of yours, or discard it and flip a face-down card.`
-        : `${who(S.current)}: swap the discard into one of your 8 spots.`;
-    } else if (S.mustFlip) {
-      msg = `${who(S.current)}: flip one of your face-down cards.`;
-    } else {
-      msg = `${who(S.current)}: draw from the pile or take the discard.`;
-    }
-    if (S.finisher !== null && S.current !== S.finisher) {
-      msg += ` <em>(${escapeHTML(S.names[S.finisher])} is out — this is your last turn!)</em>`;
-    }
-  }
-  b.innerHTML = msg;
-}
-
-function escapeHTML(s) {
-  return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-// ---------------------------------------------------------------- actions
-function onGridClick(p, i) {
-  const card = S.grids[p][i];
-
-  if (S.phase === "flip") {
-    if (p !== S.flipTurn || card.up) return;
-    card.up = true;
-    if (flippedCount(S.flipTurn) >= 2) {
-      const other = 1 - S.flipTurn;
-      if (flippedCount(other) >= 2) {
-        S.phase = "turn";
-        S.current = S.startingPlayer;
-      } else {
-        S.flipTurn = other;
-      }
-    }
-    render();
-    return;
-  }
-
-  if (S.phase !== "turn" || p !== S.current) return;
-
-  if (S.drawn !== null) {
-    // swap drawn card into this spot
-    S.discard.push(card.v);
-    S.grids[p][i] = { v: S.drawn, up: true };
-    S.drawn = null; S.drawnFrom = null;
-    endAction();
-    return;
-  }
-
-  if (S.mustFlip && !card.up) {
-    card.up = true;
-    S.mustFlip = false;
-    endAction();
-  }
-}
-
-function drawFromStock() {
-  if (S.phase !== "turn" || S.drawn !== null || S.mustFlip) return;
-  if (S.stock.length === 0) reshuffleDiscardIntoStock();
-  if (S.stock.length === 0) return;
-  S.drawn = S.stock.pop();
-  S.drawnFrom = "stock";
-  render();
-}
-
-function takeDiscard() {
-  if (S.phase !== "turn" || S.drawn !== null || S.mustFlip || !S.discard.length) return;
-  S.drawn = S.discard.pop();
-  S.drawnFrom = "discard";
-  render();
-}
-
-function discardDrawn() {
-  if (S.drawn === null || S.drawnFrom !== "stock") return;
-  S.discard.push(S.drawn);
-  S.drawn = null; S.drawnFrom = null;
-  S.mustFlip = S.grids[S.current].some(c => !c.up);
-  if (!S.mustFlip) endAction(); else render();
-}
-
-function reshuffleDiscardIntoStock() {
-  if (S.discard.length <= 1) return;
-  const top = S.discard.pop();
-  S.stock = S.discard;
-  S.discard = [top];
-  for (let i = S.stock.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [S.stock[i], S.stock[j]] = [S.stock[j], S.stock[i]];
-  }
-}
-
-function endAction() {
-  if (S.finisher !== null && S.current !== S.finisher) {
-    // the finisher's opponent just used their final turn
-    finishHole();
-    return;
-  }
-  if (allUp(S.current)) {
-    S.finisher = S.current;
-    if (allUp(1 - S.current)) { finishHole(); return; }
-  }
-  S.current = 1 - S.current;
-  render();
-}
-
-function finishHole() {
-  S.phase = "done";
-  for (let p = 0; p < 2; p++) S.grids[p].forEach(c => c.up = true);
-  const h0 = holeScore(0), h1 = holeScore(1);
-  S.scores[0].push(h0);
-  S.scores[1].push(h1);
-  // lowest score on this hole starts the next one; tie → alternate
-  if (h0 !== h1) S.startingPlayer = h0 < h1 ? 0 : 1;
-  else S.startingPlayer = 1 - S.startingPlayer;
-  render();
-  showHoleSummary(h0, h1);
-}
-
-function showHoleSummary(h0, h1) {
-  const last = S.hole >= S.totalHoles;
-  $("summary-title").textContent = last
-    ? "Final Results"
-    : `Hole ${S.hole} complete`;
-
-  const winnerEl = $("summary-winner");
-  if (last) {
-    const t0 = total(0), t1 = total(1);
-    winnerEl.classList.remove("hidden");
-    winnerEl.textContent = t0 === t1
-      ? "It's a tie!"
-      : `🏆 ${S.names[t0 < t1 ? 0 : 1]} wins!`;
-  } else {
-    winnerEl.classList.add("hidden");
-  }
-
-  $("summary-table").innerHTML = scorecardHTML(true);
-  $("summary-next-btn").textContent = last ? "Play Again" : `Start hole ${S.hole + 1}`;
-  $("summary-overlay").classList.remove("hidden");
-  S.gameOver = last;
-  save();
-}
-
-function onSummaryNext() {
-  $("summary-overlay").classList.add("hidden");
-  if (S.gameOver) {
-    clearSave();
-    showSetup();
-    return;
-  }
-  S.hole++;
-  dealHole();
-  render();
-}
-
-// ---------------------------------------------------------------- scorecard
-function scorecardHTML(highlightLast) {
-  const rows = [];
-  rows.push(`<tr><th>Hole</th><th>${escapeHTML(S.names[0])}</th><th>${escapeHTML(S.names[1])}</th></tr>`);
-  const played = S.scores[0].length;
-  for (let h = 0; h < S.totalHoles; h++) {
-    const a = h < played ? S.scores[0][h] : "–";
-    const b = h < played ? S.scores[1][h] : "–";
-    const cls = (highlightLast && h === played - 1) ? ' class="current-hole"' : "";
-    rows.push(`<tr${cls}><td>${h + 1}</td><td>${a}</td><td>${b}</td></tr>`);
-  }
-  const t0 = total(0), t1 = total(1);
-  const c0 = t0 < t1 ? ' class="leader"' : "", c1 = t1 < t0 ? ' class="leader"' : "";
-  rows.push(`<tr class="total-row"><td>Total</td><td${c0}>${t0}</td><td${c1}>${t1}</td></tr>`);
-  return `<table class="scorecard">${rows.join("")}</table>`;
-}
-
-// ---------------------------------------------------------------- screens
-function showSetup() {
-  $("setup").classList.remove("hidden");
-  $("game").classList.add("hidden");
-  const saved = localStorage.getItem(SAVE_KEY);
-  $("resume-note").classList.toggle("hidden", !saved);
-}
-
-function showGame() {
-  $("setup").classList.add("hidden");
-  $("game").classList.remove("hidden");
-  render();
-}
-
-// ---------------------------------------------------------------- wiring
-$("start-btn").addEventListener("click", () => {
-  const n1 = $("p1-name").value.trim() || "Player 1";
-  const n2 = $("p2-name").value.trim() || "Player 2";
-  newGame([n1, n2], parseInt($("holes").value, 10));
-  showGame();
-});
-
-$("resume-btn").addEventListener("click", () => {
-  try {
-    S = JSON.parse(localStorage.getItem(SAVE_KEY));
-    if (!S || !S.grids) throw new Error("bad save");
-    showGame();
-    if (S.phase === "done") showHoleSummary(
-      S.scores[0][S.scores[0].length - 1],
-      S.scores[1][S.scores[1].length - 1]
-    );
-  } catch {
-    clearSave();
-    showSetup();
-  }
-});
-
-$("stock-pile").addEventListener("click", drawFromStock);
-$("discard-drawn-btn").addEventListener("click", discardDrawn);
-$("summary-next-btn").addEventListener("click", onSummaryNext);
-
-$("newgame-btn").addEventListener("click", () => {
-  if (confirm("Abandon the current game and start a new one?")) {
-    clearSave();
-    S = null;
-    showSetup();
-  }
-});
-
-$("scorecard-btn").addEventListener("click", () => {
-  $("scorecard-table").innerHTML = scorecardHTML(false);
-  $("scorecard-overlay").classList.remove("hidden");
-});
-$("scorecard-close-btn").addEventListener("click", () => $("scorecard-overlay").classList.add("hidden"));
-$("rules-btn").addEventListener("click", () => $("rules-overlay").classList.remove("hidden"));
-$("rules-close-btn").addEventListener("click", () => $("rules-overlay").classList.add("hidden"));
-
-showSetup();
-</script>
+<script src="/game.js"></script>
 </body>
 </html>
